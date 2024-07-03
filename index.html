@@ -15,15 +15,23 @@
         document.addEventListener('DOMContentLoaded', function() {
             // URLからパラメータを取得
             const params = new URLSearchParams(window.location.search);
-            let code_str = params.get('t');
+            let code_str = params.get('t') || '12345678';  // デフォルト値
+            const mode = parseInt(params.get('m') || '3');  // デフォルトは両方に'*'
 
             // バーコード化するデータ (先頭と末尾はスタート・ストップキャラ)
-            if (code_str) {
-                code_str = '*' + code_str + '*';
-            } else {
-                code_str = '*12345678*';  // デフォルト値
+            switch (mode) {
+                case 1:
+                    code_str = '*' + code_str;
+                    break;
+                case 2:
+                    code_str = code_str + '*';
+                    break;
+                case 3:
+                    code_str = '*' + code_str + '*';
+                    break;
+                // mode が 0 または想定外の値なら '*' を追加しない
             }
-            
+
             // バーの幅
             var bar_width = 4;
 
