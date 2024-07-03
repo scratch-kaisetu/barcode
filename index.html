@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>バーコード生成</title>
+    <script>
+        // キャラクタパターン情報 (CODE39)
+        var pattern = {
+            '0':0xB65,'1':0xD4B,'2':0xD4D,'3':0xA9B,'4':0xD65,'5':0xACB,'6':0xACD,'7':0xDA5,'8':0xB4B,
+            '9':0xB4D,'A':0xD2B,'B':0xD2D,'C':0xA5B,'D':0xD35,'E':0xA6B,'F':0xA6D,'G':0xD95,'H':0xB2B,
+            'I':0xB2D,'J':0xB35,'K':0xCAB,'L':0xCAD,'M':0x95B,'N':0xCB5,'O':0x96B,'P':0x96D,'Q':0xCD5,
+            'R':0x9AB,'S':0x9AD,'T':0x9B5,'U':0xD53,'V':0xD59,'W':0xAB3,'X':0xD69,'Y':0xAD3,'Z':0xAD9,
+            '-':0xDA9,'.':0xB53,' ':0xB59,'$':0xA49,'/':0x949,'+':0x929,'%':0x925,'*':0xB69
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // URLからパラメータを取得
+            const params = new URLSearchParams(window.location.search);
+            let code_str = params.get('t');
+
+            // バーコード化するデータ (先頭と末尾はスタート・ストップキャラ)
+            if (code_str) {
+                code_str = '*' + code_str + '*';
+            } else {
+                code_str = '*12345678*';  // デフォルト値
+            }
+            
+            // バーの幅
+            var bar_width = 4;
+
+            var command = [];
+            var txt_x = [];
+
+            for (var pos = 0; pos < code_str.length; pos++) {
+                // 一文字ずつ読み込み
+                var key = code_str.charAt(pos);
+                // パターン情報を読み込む
+                if (!pattern[key]) continue;
+                var pat = pattern[key];
+
+                // キャラクタごとの描画位置
+                var left = pos * (12 + 1) * bar_width;
+                command[pos] = "";
+
+                // 2進数12ビットのパターン情報を1ビットずつ走査してバーを描画
+                for (var i = 0; i < 12; i++) {
+                    if ((pat & (1 << i)) > 0) {
+                        var x = i * bar_width + left;
+                        command[pos] += "M" + x + ",0";  // context.moveTo(x, 0)
+                        command[pos] += "L" + x + ",100"; // context.lineTo(x, 100)
+                    }
+                }
+                txt_x[pos] = (left + bar_width * 6);
+            }
+
+            // 作成したPathコマンドをSVGへ反映
+            var view = document.getElementById("svg_view");
+            for (let d of command) {
+                view.insertAdjacentHTML("beforeend",
+                    '<path stroke="black" stroke-width="4" fill="none" d="' + d + '"/>');
+            }
+            
+            // テキストを描画
+            var text = document.getElementById("code_chr");
+            text.innerHTML = code_str;
+            text.setAttribute("x", txt_x.join(" "));
+            text.setAttribute("y", 120);
+        });
+    </script>
+</head>
+<body>
+    <!-- SVG View -->
+    <svg viewBox="0 0 800 400" id="svg_view">
+        <text id="code_chr" style="font-size:22px;"></text>
+    </svg>
+</body>
+</html>
