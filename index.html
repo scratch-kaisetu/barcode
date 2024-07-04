@@ -15,17 +15,19 @@
         document.addEventListener('DOMContentLoaded', function() {
             // URLからパラメータを取得
             const params = new URLSearchParams(window.location.search);
-            let code_str = params.get('t') || '12345678';  // デフォルト値
+            let code_str = params.get('t') || '123456';  // デフォルト値
             const mode = parseInt(params.get('m') || '3');  // デフォルトは両方に'*'
-            const width = parseInt(params.get('x') || '800');  // デフォルト横幅
-            const maxLength = parseInt(params.get('max') || '20');  // デフォルト最大文字数
-            const height = width / 8;  // 高さは横幅の1/8
+            const width = parseInt(params.get('x') || '500');  // デフォルト横幅
+            const height = parseInt(params.get('y') || '100');  // デフォルト高さ
+            const maxLength = parseInt(params.get('max') || '10');  // デフォルト最大文字数
 
-            // maxLength に基づいて code_str を調整
-            if (code_str.length > maxLength) {
-                code_str = code_str.substring(0, maxLength);
-            } else {
-                code_str = code_str.padStart(maxLength, '0');
+            // maxLength が有効な値かを確認
+            if (!isNaN(maxLength) && maxLength > 0) {
+                if (code_str.length > maxLength) {
+                    code_str = code_str.substring(0, maxLength);
+                } else {
+                    code_str = code_str.padStart(maxLength, '0');
+                }
             }
 
             // バーコード化するデータ (先頭と末尾はスタート・ストップキャラ)
@@ -43,7 +45,7 @@
             }
 
             // バーの幅
-            var bar_width = width / ((code_str.length * (12 + 1)) - 1);
+            const bar_width = width / ((code_str.length * (12 + 1)) - 1);
 
             var command = [];
             var txt_x = [];
@@ -73,6 +75,8 @@
             // 作成したPathコマンドをSVGへ反映
             var view = document.getElementById("svg_view");
             view.setAttribute("viewBox", `0 0 ${width} ${height + 40}`);
+            view.setAttribute("width", width);
+            view.setAttribute("height", height + 40);
             for (let d of command) {
                 view.insertAdjacentHTML("beforeend",
                     '<path stroke="black" stroke-width="' + bar_width + '" fill="none" d="' + d + '"/>');
